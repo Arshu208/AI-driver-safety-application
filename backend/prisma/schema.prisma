@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  role      String
+  createdAt DateTime @default(now())
+
+  trips Trip[]
+}
+
+model Trip {
+  id          String   @id @default(uuid())
+  userId      String
+  startedAt   DateTime @default(now())
+  endedAt     DateTime?
+  safetyScore Float?
+
+  user User @relation(fields: [userId], references: [id])
+
+  telemetry   TelemetryEvent[]
+  safetyEvents SafetyEvent[]
+}
+
+model TelemetryEvent {
+  id            String   @id @default(uuid())
+  tripId        String
+
+  fatigueLevel  Float
+  blinkRate     Float
+  perclos       Float
+  isDrowsy      Boolean
+
+  createdAt DateTime @default(now())
+
+  trip Trip @relation(fields: [tripId], references: [id])
+
+  @@index([createdAt])
+}
+
+model SafetyEvent {
+  id          String   @id @default(uuid())
+  tripId      String
+
+  severity    String
+  eventType   String
+  fatigue     Float
+  perclos     Float
+
+  createdAt DateTime @default(now())
+
+  trip Trip @relation(fields: [tripId], references: [id])
+
+  @@index([severity])
+}
