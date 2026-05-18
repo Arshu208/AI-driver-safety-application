@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 import { StopCircle, MapPin, Clock, Gauge, Eye } from 'lucide-react';
 import Button from '../components/Button';
 import GlassCard from '../components/GlassCard';

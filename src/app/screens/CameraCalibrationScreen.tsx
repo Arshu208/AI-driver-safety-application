@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Camera, CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 import GlassCard from '../components/GlassCard';
 import Button from '../components/Button';
 import { motion } from 'motion/react';

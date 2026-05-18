@@ -6,7 +6,7 @@ import Webcam from 'react-webcam';
 import { useMonitoringStore } from '../../store/monitoringStore';
 import { useTripStore } from '../../store/tripStore';
 import { useDriverMonitoring } from '../../hooks/useDriverMonitoring';
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../../services/api';
 import Button from '../components/Button';
 

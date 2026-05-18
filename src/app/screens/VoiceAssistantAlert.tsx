@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 import { Volume2, Mic, MessageSquare, VolumeX } from 'lucide-react';
 import Button from '../components/Button';
 import GlassCard from '../components/GlassCard';

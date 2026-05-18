@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router";
+import { createBrowserRouter } from 'react-router-dom';
 
 // Onboarding & Auth
 import SplashScreen from "./screens/SplashScreen";
@@ -73,11 +73,13 @@ import LogoutConfirmation from "./screens/LogoutConfirmation";
 // Root layout with navigation
 import RootLayout from "./layouts/RootLayout";
 import { ProtectedRoute } from "../components/auth/ProtectedRoute";
+import ErrorFallback from "../components/ErrorFallback";
 
 export const router = createBrowserRouter([
   {
     path: "/",
     Component: RootLayout,
+    errorElement: <ErrorFallback />,
     children: [
       // Onboarding flow
       { index: true, Component: SplashScreen },

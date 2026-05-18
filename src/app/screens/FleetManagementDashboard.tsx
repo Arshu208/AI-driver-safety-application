@@ -17,7 +17,7 @@ export default function FleetManagementDashboard() {
     { vehicle: 'Van-015', driver: 'Emma Davis', alert: 'Speed', severity: 'info', time: '15 min ago' },
     { vehicle: 'Truck-033', driver: 'Mike Chen', alert: 'Fatigue', severity: 'warning', time: '32 min ago' },
   ]);
-
+ 
   useEffect(() => {
     connectSocket();
     

@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 import { AlertTriangle, Coffee, Volume2, X } from 'lucide-react';
 import Button from '../components/Button';
 import GlassCard from '../components/GlassCard';

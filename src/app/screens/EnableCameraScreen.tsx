@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 import { Camera, CheckCircle } from 'lucide-react';
 import Button from '../components/Button';
 import GlassCard from '../components/GlassCard';

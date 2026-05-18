@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 import { Eye, ChevronRight } from 'lucide-react';
 import Button from '../components/Button';
 import { motion } from 'motion/react';

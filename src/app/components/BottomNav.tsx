@@ -1,5 +1,5 @@
 import { Home, Activity, Shield, BarChart3, Settings } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface NavItem {
   icon: React.ElementType;

@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 import { User, Bell, Shield, CreditCard, Palette, HelpCircle, LogOut, ChevronRight } from 'lucide-react';
 import GlassCard from '../components/GlassCard';
 
