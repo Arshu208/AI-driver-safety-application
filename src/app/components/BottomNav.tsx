@@ -20,8 +20,8 @@ export default function BottomNav() {
   const location = useLocation();
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 glass-card border-t border-primary/20 backdrop-blur-xl">
-      <div className="max-w-md mx-auto px-4 py-3">
+    <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-primary/20 bg-white/95 backdrop-blur-xl lg:hidden">
+      <div className="mx-auto max-w-md px-4 py-3">
         <div className="flex items-center justify-around">
           {navItems.map((item) => {
             const Icon = item.icon;

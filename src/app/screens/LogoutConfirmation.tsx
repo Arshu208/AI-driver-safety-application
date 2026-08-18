@@ -3,11 +3,14 @@ import { LogOut, AlertTriangle } from 'lucide-react';
 import Button from '../components/Button';
 import GlassCard from '../components/GlassCard';
 import { motion } from 'motion/react';
+import { useAuthStore } from '../../store/authStore';
 
 export default function LogoutConfirmation() {
   const navigate = useNavigate();
+  const logout = useAuthStore((state) => state.logout);
 
   const handleLogout = () => {
+    logout();
     navigate('/login');
   };
 

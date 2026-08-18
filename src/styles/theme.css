@@ -5,24 +5,24 @@
 
   /* RideSafe AI - Futuristic Automotive Theme */
   /* Dark mode primary with neon accents */
-  --background: #0a0b14;
-  --foreground: #e8eaed;
-  --card: rgba(15, 17, 28, 0.8);
-  --card-foreground: #e8eaed;
-  --popover: rgba(15, 17, 28, 0.95);
-  --popover-foreground: #e8eaed;
+  --background: #f5f8fc;
+  --foreground: #172033;
+  --card: rgba(255, 255, 255, 0.92);
+  --card-foreground: #172033;
+  --popover: rgba(255, 255, 255, 0.98);
+  --popover-foreground: #172033;
 
   /* Neon Blue Primary */
   --primary: #00d4ff;
-  --primary-foreground: #0a0b14;
+  --primary-foreground: #ffffff;
 
   /* Deep Purple Secondary */
-  --secondary: #7c3aed;
+  --secondary: #d946ef;
   --secondary-foreground: #ffffff;
 
   /* Electric Cyan Accent */
-  --accent: #22d3ee;
-  --accent-foreground: #0a0b14;
+  --accent: #facc15;
+  --accent-foreground: #172033;
 
   /* Safety Orange for alerts */
   --warning: #ff6b00;
@@ -31,20 +31,21 @@
   /* Danger/Critical */
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
+  --error: #fb4d6b;
 
   /* Success/Safe */
   --success: #10b981;
   --success-foreground: #ffffff;
 
   /* Muted elements */
-  --muted: rgba(30, 33, 48, 0.6);
-  --muted-foreground: #94a3b8;
+  --muted: #e8eef6;
+  --muted-foreground: #64748b;
 
   /* Borders with glow */
-  --border: rgba(0, 212, 255, 0.15);
-  --input: rgba(0, 212, 255, 0.2);
-  --input-background: rgba(15, 17, 28, 0.6);
-  --switch-background: #1e2130;
+  --border: #d9e2ef;
+  --input: #cbd8e8;
+  --input-background: #ffffff;
+  --switch-background: #cbd5e1;
 
   /* Ring glow effect */
   --ring: rgba(0, 212, 255, 0.4);
@@ -57,8 +58,8 @@
   --chart-5: #10b981;
 
   /* Glassmorphism */
-  --glass-bg: rgba(15, 17, 28, 0.4);
-  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-bg: rgba(255, 255, 255, 0.86);
+  --glass-border: rgba(148, 163, 184, 0.22);
 
   /* HUD elements */
   --hud-primary: #00d4ff;
@@ -67,7 +68,7 @@
   --hud-safe: #10b981;
 
   /* Gradients */
-  --gradient-primary: linear-gradient(135deg, #00d4ff 0%, #7c3aed 100%);
+  --gradient-primary: linear-gradient(135deg, #00d4ff 0%, #d946ef 55%, #facc15 100%);
   --gradient-warning: linear-gradient(135deg, #ff6b00 0%, #ef4444 100%);
   --gradient-safe: linear-gradient(135deg, #10b981 0%, #22d3ee 100%);
 
@@ -85,8 +86,8 @@
   --radius-xl: 1.5rem;
 
   /* Sidebar/Navigation */
-  --sidebar: rgba(10, 11, 20, 0.95);
-  --sidebar-foreground: #e8eaed;
+  --sidebar: rgba(255, 255, 255, 0.96);
+  --sidebar-foreground: #172033;
   --sidebar-primary: #00d4ff;
   --sidebar-primary-foreground: #0a0b14;
   --sidebar-accent: rgba(0, 212, 255, 0.1);
@@ -96,10 +97,10 @@
 }
 
 .dark {
-  --background: #0a0b14;
-  --foreground: #e8eaed;
-  --card: rgba(15, 17, 28, 0.8);
-  --card-foreground: #e8eaed;
+  --background: #f5f8fc;
+  --foreground: #172033;
+  --card: rgba(255, 255, 255, 0.92);
+  --card-foreground: #172033;
   --popover: rgba(15, 17, 28, 0.95);
   --popover-foreground: #e8eaed;
   --primary: #00d4ff;
@@ -158,6 +159,7 @@
   --color-success-foreground: var(--success-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-error: var(--error);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-input-background: var(--input-background);
@@ -195,7 +197,9 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-image: radial-gradient(circle at 10% 0%, rgba(0, 212, 255, 0.14), transparent 32%), radial-gradient(circle at 90% 18%, rgba(217, 70, 239, 0.12), transparent 30%), linear-gradient(135deg, #081018 0%, #101522 50%, #17111b 100%);
+    background-attachment: fixed;
+    font-family: "Trebuchet MS", "Segoe UI", sans-serif;
   }
 
   html {
@@ -265,6 +269,10 @@
     box-shadow: 0 0 20px rgba(239, 68, 68, 0.4), 0 0 40px rgba(239, 68, 68, 0.2);
   }
 
+  .glow-error {
+    box-shadow: 0 0 20px rgba(251, 77, 107, 0.4), 0 0 40px rgba(251, 77, 107, 0.2);
+  }
+
   .glow-success {
     box-shadow: 0 0 20px rgba(16, 185, 129, 0.4), 0 0 40px rgba(16, 185, 129, 0.2);
   }
@@ -296,4 +304,39 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+
+  @keyframes scan {
+    from { transform: translateY(-100%); }
+    to { transform: translateY(100%); }
+  }
+
+  @keyframes dash {
+    to { stroke-dashoffset: -24; }
+  }
+
+  .animate-scan { animation: scan 2.4s ease-in-out infinite; }
+  .animate-dash { animation: dash 1.2s linear infinite; }
 }
+
+@source inline("text-{primary,secondary,accent,warning,success,destructive,error} bg-{primary,secondary,accent,warning,success,destructive,error} border-{primary,secondary,accent,warning,success,destructive,error} from-{primary,secondary,accent,warning,success,destructive,error} to-{primary,secondary,accent,warning,success,destructive,error} glow-{primary,warning,danger,success,error}");
+
+.ridesafe-map-marker {
+  background: transparent;
+  border: 0;
+}
+
+.ridesafe-map-marker span {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 3px solid #ffffff;
+  border-radius: 999px;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.35);
+}
+
+.ridesafe-map-marker-start { background: #10b981; }
+.ridesafe-map-marker-destination { background: #ef4444; }

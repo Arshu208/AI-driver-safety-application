@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom';
 
 // Onboarding & Auth
+import LandingPage from "./screens/LandingPage";
 import SplashScreen from "./screens/SplashScreen";
 import Onboarding1 from "./screens/Onboarding1";
 import Onboarding2 from "./screens/Onboarding2";
@@ -8,6 +9,7 @@ import Onboarding3 from "./screens/Onboarding3";
 import Onboarding4 from "./screens/Onboarding4";
 import LoginScreen from "./screens/LoginScreen";
 import SignupScreen from "./screens/SignupScreen";
+import FaceLockSetupScreen from "./screens/FaceLockSetupScreen";
 import ForgotPasswordScreen from "./screens/ForgotPasswordScreen";
 import OTPVerificationScreen from "./screens/OTPVerificationScreen";
 import CreateProfileScreen from "./screens/CreateProfileScreen";
@@ -24,6 +26,9 @@ import HomeDashboard from "./screens/HomeDashboard";
 import AIDriverMonitoringLive from "./screens/AIDriverMonitoringLive";
 import CameraCalibrationScreen from "./screens/CameraCalibrationScreen";
 import RealTimeEyeTracking from "./screens/RealTimeEyeTracking";
+import DriverEmotionDetection from "./screens/DriverEmotionDetection";
+import NightVisionMode from "./screens/NightVisionMode";
+import SmartNavigationSafety from "./screens/SmartNavigationSafety";
 
 // Alerts & Detection
 import DrowsinessAlertPopup from "./screens/DrowsinessAlertPopup";
@@ -81,8 +86,11 @@ export const router = createBrowserRouter([
     Component: RootLayout,
     errorElement: <ErrorFallback />,
     children: [
+      // Main Landing Page
+      { index: true, Component: LandingPage },
+      
       // Onboarding flow
-      { index: true, Component: SplashScreen },
+      { path: "splash", Component: SplashScreen },
       { path: "onboarding-1", Component: Onboarding1 },
       { path: "onboarding-2", Component: Onboarding2 },
       { path: "onboarding-3", Component: Onboarding3 },
@@ -91,6 +99,7 @@ export const router = createBrowserRouter([
       // Auth
       { path: "login", Component: LoginScreen },
       { path: "signup", Component: SignupScreen },
+          { path: "face-lock-setup", Component: FaceLockSetupScreen },
       { path: "forgot-password", Component: ForgotPasswordScreen },
       { path: "otp-verification", Component: OTPVerificationScreen },
       { path: "create-profile", Component: CreateProfileScreen },
@@ -110,6 +119,9 @@ export const router = createBrowserRouter([
           { path: "ai-monitoring-live", Component: AIDriverMonitoringLive },
           { path: "camera-calibration", Component: CameraCalibrationScreen },
           { path: "eye-tracking", Component: RealTimeEyeTracking },
+          { path: "emotion-detection", Component: DriverEmotionDetection },
+          { path: "night-vision", Component: NightVisionMode },
+          { path: "smart-navigation", Component: SmartNavigationSafety },
 
           // Alerts
           { path: "drowsiness-alert", Component: DrowsinessAlertPopup },

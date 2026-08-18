@@ -1,0 +1,112 @@
+name: Quality Gates
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  web-build:
+    name: Web build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+
+  api-and-ui-tests:
+    name: API, load and Selenium tests
+    runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm ci
+        working-directory: backend
+      - run: npm ci
+        working-directory: selenium-tests
+      - run: npm run build
+        working-directory: backend
+      - name: Start backend
+        env:
+          MONGO_URI: mongodb://127.0.0.1:27017/ridesafe
+          PORT: 5000
+        run: |
+          cd backend
+          nohup npm start > "$RUNNER_TEMP/backend.log" 2>&1 &
+          for i in {1..30}; do curl --fail http://127.0.0.1:5000/api/health && break || sleep 2; done
+      - name: Start web app
+        run: |
+          nohup npm run dev -- --host 127.0.0.1 > "$RUNNER_TEMP/web.log" 2>&1 &
+          for i in {1..30}; do curl --fail http://127.0.0.1:5173 && break || sleep 2; done
+      - name: Run Selenium tests
+        env:
+          RIDESAFE_WEB_URL: http://127.0.0.1:5173
+        working-directory: selenium-tests
+        run: npm test
+      - name: Generate Selenium Excel report
+        working-directory: selenium-tests
+        run: npm run report
+      - name: Run API load test
+        env:
+          RIDESAFE_API_URL: http://127.0.0.1:5000/api
+          LOAD_TEST_USERS: 10
+          LOAD_TEST_DURATION_MS: 10000
+        run: node load-tests/loadtest.js
+      - name: Upload API and Selenium results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-selenium-results
+          path: |
+            selenium-tests/test-results.json
+            selenium-tests/ridesafe-selenium-report.xlsx
+            ${{ runner.temp }}/backend.log
+            ${{ runner.temp }}/web.log
+
+  mobile-and-appium:
+    name: Mobile bundle and Appium report gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --legacy-peer-deps
+        working-directory: mobile
+      - run: npm run typecheck
+        working-directory: mobile
+      - run: npx expo export --platform android --output-dir .expo-export-ci
+        working-directory: mobile
+      - run: node ci/validate-pass-reports.mjs mobile/appium-tests/Appium_Test_Report.xlsx load-tests/LoadTest_Report.xlsx
+      - name: Upload mobile and Appium results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-appium-load-results
+          path: |
+            mobile/appium-tests/Appium_Test_Report.xlsx
+            load-tests/LoadTest_Report.xlsx
+            mobile/.expo-export-ci

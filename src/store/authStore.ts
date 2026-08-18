@@ -1,10 +1,16 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { disconnectSocket } from '../services/socket';
 
 interface User {
   id: string;
   name: string;
-  email: string;
+  email?: string;
+  phone?: string;
   role: 'DRIVER' | 'FLEET_MANAGER';
+  vehicleNumber?: string;
+  emergencyContact?: string;
+  safetyScore?: number;
 }
 
 interface AuthState {
@@ -16,11 +22,22 @@ interface AuthState {
   logout: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>()(persist((set) => ({
   user: null,
   isAuthenticated: false,
   token: null,
 
-  login: (user, token) => set({ user, token, isAuthenticated: true }),
-  logout: () => set({ user: null, token: null, isAuthenticated: false }),
+  login: (user, token) => {
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(user));
+    set({ user, token, isAuthenticated: true });
+  },
+  logout: () => {
+    disconnectSocket();
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    set({ user: null, token: null, isAuthenticated: false });
+  },
+}), {
+  name: 'ridesafe-auth',
 }));

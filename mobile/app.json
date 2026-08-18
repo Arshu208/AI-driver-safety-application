@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "RideSafe AI",
+    "slug": "ridesafe-ai",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "scheme": "ridesafe",
+    "plugins": [
+      ["expo-camera", { "cameraPermission": "RideSafe uses your camera for driver safety monitoring." }],
+      ["expo-location", { "locationWhenInUsePermission": "RideSafe uses your location for navigation and emergency support." }],
+      ["expo-notifications", { "color": "#0ea5e9" }]
+    ],
+    "android": { "adaptiveIcon": { "backgroundColor": "#0ea5e9" }, "package": "com.ridesafe.ai" },
+    "ios": { "supportsTablet": true, "bundleIdentifier": "com.ridesafe.ai" }
+  }
+}

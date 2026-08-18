@@ -1,8 +1,10 @@
 import { io } from 'socket.io-client';
 
-const SOCKET_URL = import.meta.env.VITE_API_URL 
-  ? import.meta.env.VITE_API_URL.replace('/api', '') 
-  : 'http://localhost:5000';
+const SOCKET_URL = typeof window !== 'undefined'
+  ? `http://${window.location.hostname}:5000`
+  : import.meta.env.VITE_API_URL
+    ? import.meta.env.VITE_API_URL.replace('/api', '')
+    : 'http://localhost:5000';
 
 export const socket = io(SOCKET_URL, {
   autoConnect: false, // We'll connect when needed

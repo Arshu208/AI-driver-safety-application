@@ -8,6 +8,10 @@ export default function EnableLocationScreen() {
   const navigate = useNavigate();
 
   const handleEnable = () => {
+    navigator.geolocation.getCurrentPosition(
+      (position) => localStorage.setItem('ridesafe-location-enabled', JSON.stringify({ latitude: position.coords.latitude, longitude: position.coords.longitude })),
+      () => localStorage.removeItem('ridesafe-location-enabled')
+    );
     navigate('/enable-notifications');
   };
 

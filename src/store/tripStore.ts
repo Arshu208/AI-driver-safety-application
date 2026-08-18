@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 interface TripState {
   isActiveTrip: boolean;
@@ -12,7 +13,7 @@ interface TripState {
   updateTripStats: (distance: number, score: number) => void;
 }
 
-export const useTripStore = create<TripState>((set) => ({
+export const useTripStore = create<TripState>()(persist((set) => ({
   isActiveTrip: false,
   tripId: null,
   startTime: null,
@@ -22,4 +23,6 @@ export const useTripStore = create<TripState>((set) => ({
   startTrip: (id) => set({ isActiveTrip: true, tripId: id, startTime: Date.now(), distanceMiles: 0, safetyScore: 100 }),
   endTrip: () => set({ isActiveTrip: false, tripId: null, startTime: null }),
   updateTripStats: (distance, score) => set({ distanceMiles: distance, safetyScore: score })
+}), {
+  name: 'ridesafe-trip',
 }));

@@ -1,9 +1,10 @@
-import { MapPin, Navigation, Phone, Clock, Heart } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { MapPin, Navigation, Phone, Clock, Heart, Coffee, Fuel, Hotel, RefreshCw } from 'lucide-react';
 import Button from '../components/Button';
 import GlassCard from '../components/GlassCard';
 
 export default function NearbyHospitalsHelp() {
-  const locations = [
+  const fallbackLocations = [
     {
       type: 'Hospital',
       name: 'UCSF Medical Center',
@@ -45,6 +46,35 @@ export default function NearbyHospitalsHelp() {
       color: 'primary'
     },
   ];
+  const [locations, setLocations] = useState(fallbackLocations);
+  const [locationLabel, setLocationLabel] = useState('Requesting your location...');
+  const [loading, setLoading] = useState(false);
+
+  const findNearby = () => {
+    setLoading(true);
+    navigator.geolocation.getCurrentPosition(async ({ coords }) => {
+      setLocationLabel(`${coords.latitude.toFixed(3)}, ${coords.longitude.toFixed(3)}`);
+      try {
+        const query = `[out:json];(nwr(around:5000,${coords.latitude},${coords.longitude})[amenity~"cafe|fast_food|fuel|hospital"];nwr(around:5000,${coords.latitude},${coords.longitude})[tourism=hotel];);out center tags;`;
+        const response = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`);
+        const data = await response.json();
+        const discovered = data.elements.map((item: any) => {
+          const tags = item.tags || {};
+          const type = tags.amenity === 'hospital' ? 'Hospital' : tags.amenity === 'fuel' ? 'Fuel' : tags.tourism === 'hotel' ? 'Hotel' : 'Cafe / Food';
+          return { type, name: tags.name || type, distance: 'Nearby', eta: 'Route available', phone: tags.phone || 'N/A', address: [tags['addr:street'], tags['addr:housenumber']].filter(Boolean).join(' ') || 'OpenStreetMap location', icon: type === 'Hospital' ? Heart : type === 'Fuel' ? Fuel : type === 'Hotel' ? Hotel : Coffee, color: type === 'Hospital' ? 'destructive' : 'primary', lat: item.lat || item.center?.lat, lon: item.lon || item.center?.lon };
+        }).filter((item: any) => item.name).slice(0, 12);
+        if (discovered.length) setLocations(discovered);
+      } catch { setLocationLabel(`${coords.latitude.toFixed(3)}, ${coords.longitude.toFixed(3)} · fallback places`); }
+      setLoading(false);
+    }, () => { setLocationLabel('Location permission unavailable · showing sample places'); setLoading(false); });
+  };
+
+  useEffect(() => { findNearby(); }, []);
+
+  const navigateTo = (location: any) => {
+    const destination = location.lat && location.lon ? `${location.lat},${location.lon}` : encodeURIComponent(`${location.name}, ${location.address}`);
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${destination}`, '_blank', 'noopener,noreferrer');
+  };
 
   return (
     <div className="min-h-screen p-6 pb-24">
@@ -60,14 +90,14 @@ export default function NearbyHospitalsHelp() {
           </div>
           <div className="flex-1">
             <h3 className="mb-1">Your Location</h3>
-            <p className="text-sm text-muted-foreground">Downtown San Francisco, CA</p>
+            <p className="text-sm text-muted-foreground">{locationLabel}</p>
           </div>
         </div>
 
-        <Button fullWidth variant="ghost">
+        <Button fullWidth variant="ghost" onClick={findNearby} disabled={loading}>
           <span className="flex items-center justify-center gap-2">
-            <Navigation className="w-5 h-5" />
-            Update Location
+            <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+            {loading ? 'Finding nearby places...' : 'Update Location'}
           </span>
         </Button>
       </GlassCard>
@@ -116,14 +146,14 @@ export default function NearbyHospitalsHelp() {
               </div>
 
               <div className="grid grid-cols-2 gap-2">
-                <Button size="sm" variant="ghost">
+                <Button size="sm" variant="ghost" onClick={() => navigateTo(location)}>
                   <span className="flex items-center justify-center gap-1">
                     <Navigation className="w-4 h-4" />
                     Navigate
                   </span>
                 </Button>
                 {location.phone !== 'N/A' && (
-                  <Button size="sm" variant="ghost">
+                  <Button size="sm" variant="ghost" onClick={() => { window.location.href = `tel:${location.phone}`; }}>
                     <span className="flex items-center justify-center gap-1">
                       <Phone className="w-4 h-4" />
                       Call

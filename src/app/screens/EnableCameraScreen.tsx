@@ -7,7 +7,14 @@ import { motion } from 'motion/react';
 export default function EnableCameraScreen() {
   const navigate = useNavigate();
 
-  const handleEnable = () => {
+  const handleEnable = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      stream.getTracks().forEach((track) => track.stop());
+      localStorage.setItem('ridesafe-camera-enabled', 'true');
+    } catch {
+      localStorage.removeItem('ridesafe-camera-enabled');
+    }
     navigate('/enable-location');
   };
 

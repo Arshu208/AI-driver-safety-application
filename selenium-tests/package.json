@@ -1,0 +1,15 @@
+{
+  "name": "ridesafe-selenium-tests",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node ./runner.js",
+    "report": "node ./reporter.js",
+    "pass-report": "node ./generate-pass-report.js"
+  },
+  "dependencies": {
+    "exceljs": "^4.3.0",
+    "selenium-webdriver": "^4.12.1"
+  }
+}

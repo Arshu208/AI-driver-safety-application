@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Shield, TrendingUp, Clock, MapPin, Zap, Activity } from 'lucide-react';
+import { Play, Shield, TrendingUp, Clock, MapPin, Zap, Activity, Navigation, Coffee } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import GlassCard from '../components/GlassCard';
 import StatusBadge from '../components/StatusBadge';
@@ -8,7 +8,9 @@ import AIStatusIndicator from '../components/AIStatusIndicator';
 import Button from '../components/Button';
 import { useMonitoringStore } from '../../store/monitoringStore';
 import { useTripStore } from '../../store/tripStore';
+import { useAuthStore } from '../../store/authStore';
 import { api } from '../../services/api';
+import { cleanupAlertAudio, getAlertAudioStatus, initializeAlertAudio } from '../../services/alertAudio';
 
 const mockChartData = [
   { time: '10:00', score: 95 },
@@ -29,35 +31,44 @@ export default function HomeDashboard() {
     avgFleetSafetyScore: 100,
     fleetTrend: 'stable'
   });
+  const [alertAudioStatus, setAlertAudioStatus] = useState(getAlertAudioStatus());
+  const user = useAuthStore((s) => s.user) || JSON.parse(localStorage.getItem('user') || '{}');
 
   useEffect(() => {
-    api.get('/analytics/dashboard')
-      .then(res => setDashboardData(res.data))
-      .catch(err => console.error("Failed to load dashboard data", err));
+    // Optionally connect socket.io here for real-time fatigue-alert
   }, []);
 
   const handleStartTrip = async () => {
+    const audioInitialized = await initializeAlertAudio();
+    setAlertAudioStatus(audioInitialized ? 'Alert Sound: Ready' : 'Alert Sound: Not Ready');
     try {
-      const res = await api.post('/trips/start', { userId: 'demo-user-id' });
-      startTrip(res.data.id);
+      const res = await api.post('/trips/start', { userId: user?.id });
+      startTrip(res.data._id || res.data.id);
       navigate('/ai-monitoring-live');
     } catch (error) {
       console.error("Failed to start trip", error);
-      startTrip('demo-trip-id');
-      navigate('/ai-monitoring-live');
+      cleanupAlertAudio();
     }
   };
 
   return (
     <div className="min-h-screen p-6 pb-24">
-      <div className="mb-6">
-        <h1 className="mb-2">Welcome back, Driver</h1>
-        <p className="text-muted-foreground text-sm">Stay safe on your journey</p>
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <h1 className="mb-2 text-2xl font-bold gradient-text">Welcome back, {user?.name || 'Driver'}</h1>
+          <p className="text-muted-foreground text-sm">Vehicle: {user?.vehicleNumber || 'Tesla Model 3'} | Safety Score: {user?.safetyScore || 100}</p>
+        </div>
+        <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center glow-primary">
+          <span className="font-bold text-primary">{user?.name ? user.name.charAt(0).toUpperCase() : 'D'}</span>
+        </div>
       </div>
 
-      <GlassCard glow="primary" className="mb-6">
+      <GlassCard glow="primary" className="mb-6 border-primary/20">
         <div className="flex items-center justify-between mb-4">
-          <h3>Quick Start</h3>
+          <div>
+            <h3 className="font-bold">Live AI Detection Ready</h3>
+            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1"><MapPin className="w-3 h-3"/> GPS Online • Camera Active</p>
+          </div>
           <StatusBadge status="safe" label="Ready" />
         </div>
         <Button fullWidth onClick={handleStartTrip}>
@@ -66,10 +77,30 @@ export default function HomeDashboard() {
             Start Driving Session
           </span>
         </Button>
+        <p className={`mt-3 text-center text-xs ${alertAudioStatus === 'Alert Sound: Ready' ? 'text-success' : 'text-destructive'}`} aria-live="polite">
+          {alertAudioStatus}
+        </p>
       </GlassCard>
 
       <div className="mb-6">
         <AIStatusIndicator fatigueLevel={Math.round(fatigueLevel)} eyeStatus={eyeStatus.includes('Open') ? 'open' : 'closed'} aiActive={true} />
+      </div>
+
+      <div className="mb-6 grid gap-4 md:grid-cols-2">
+        <GlassCard className="border-primary/20 bg-primary/5">
+          <div className="mb-4 flex items-start gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/15 text-primary"><Navigation className="h-5 w-5" /></div>
+            <div><h3 className="font-bold">Navigate safely</h3><p className="mt-1 text-xs text-muted-foreground">Plan a destination and keep route hazards visible.</p></div>
+          </div>
+          <Button fullWidth variant="secondary" onClick={() => navigate('/smart-navigation')}>Open navigation</Button>
+        </GlassCard>
+        <GlassCard className="border-accent/30 bg-accent/10">
+          <div className="mb-4 flex items-start gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent/20 text-accent-foreground"><Coffee className="h-5 w-5" /></div>
+            <div><h3 className="font-bold">Find a rest stop</h3><p className="mt-1 text-xs text-muted-foreground">Discover cafes, hotels, fuel stops, and nearby help.</p></div>
+          </div>
+          <Button fullWidth variant="ghost" onClick={() => navigate('/nearby-hospitals')}>Find rest places</Button>
+        </GlassCard>
       </div>
 
       <div className="mb-4">

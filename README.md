@@ -29,8 +29,7 @@ RideSafe AI is an enterprise-grade, real-time driver safety and fleet management
 **Backend Architecture:**
 - Node.js & Express
 - Socket.IO (Bidirectional Event Streaming)
-- Prisma ORM (Database schema management)
-- SQLite (Development Database) -> PostgreSQL (Production ready)
+- Mongoose (MongoDB persistence)
 - Zod (Validation)
 - JWT (Authentication)
 
@@ -42,7 +41,7 @@ RideSafe AI is an enterprise-grade, real-time driver safety and fleet management
     (WebSockets)
          |
          v
-[ Node.js Backend ] --> (Risk Engine / Scoring) --> [ Prisma / Database ]
+[ Node.js Backend ] --> (Risk Engine / Scoring) --> [ MongoDB ]
          |
     (WebSockets)
          |
@@ -76,34 +75,43 @@ RideSafe AI is an enterprise-grade, real-time driver safety and fleet management
      ```
    - Create `.env` in `backend/`
      ```env
-     DATABASE_URL="file:./dev.db"
+     MONGO_URI="mongodb://127.0.0.1:27017/ridesafe"
      JWT_SECRET="your-super-secret-key"
      PORT=5000
      ```
 
-4. **Initialize Database:**
-   ```bash
-   cd backend
-   npx prisma migrate dev --name init
-   ```
-
-5. **Start the Application:**
+4. **Start the Application:**
    Run the backend:
    ```bash
    cd backend
-   npm run dev
+   npm run dev -- --host 0.0.0.0
    ```
+
    Run the frontend in a new terminal:
    ```bash
    npm run dev
    ```
 
+### Expo mobile client
+
+The `mobile/` client is Expo SDK 54 and uses the same backend, MongoDB database, REST endpoints, and Socket.IO server as the web client. For a physical phone, set `EXPO_PUBLIC_API_URL` to the computer's LAN address instead of `localhost`.
+
+```powershell
+cd mobile
+npm install
+Copy-Item .env.example .env
+# Edit .env and replace the sample LAN address with your computer IPv4 address.
+npm start
+```
+
+Then scan the Expo QR code with Expo Go, or run `npm run android` with an Android emulator/device attached.
+
 ## ☁️ Cloud Deployment (Production)
 
 The platform is designed to be deployed across modern cloud providers:
 
-1. **Database:** Deploy PostgreSQL on [Supabase](https://supabase.com/). Update the `DATABASE_URL` in the backend `.env`.
-2. **Backend:** Deploy the `backend/` directory as a Web Service on [Render](https://render.com/). Set the build command to `npm install && npm run build` and start command to `npm start`. Ensure `DATABASE_URL` and `JWT_SECRET` are configured.
+1. **Database:** Deploy MongoDB Atlas and update `MONGO_URI` in the backend `.env`.
+2. **Backend:** Deploy the `backend/` directory as a Web Service on [Render](https://render.com/). Set the build command to `npm install && npm run build` and start command to `npm start`. Ensure `MONGO_URI` and `JWT_SECRET` are configured.
 3. **Frontend:** Import the project into [Vercel](https://vercel.com/). Add `VITE_API_URL` and `VITE_SOCKET_URL` pointing to your Render backend instance.
 
 ---

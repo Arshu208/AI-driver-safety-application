@@ -4,10 +4,14 @@ import Webcam from 'react-webcam';
 import { useMonitoringStore } from '../store/monitoringStore';
 import { useTripStore } from '../store/tripStore';
 import { socket, connectSocket } from '../services/socket';
+import { useAuthStore } from '../store/authStore';
+import { playBlinkAlert, startCriticalAlarm } from '../services/alertAudio';
 
 export function useDriverMonitoring(webcamRef: RefObject<Webcam | null>) {
   const setMonitoringData = useMonitoringStore((s) => s.setMonitoringData);
   const tripId = useTripStore((s) => s.tripId);
+  const token = useAuthStore((s) => s.token);
+  const driverId = useAuthStore((s) => s.user?.id);
   const [isAiReady, setIsAiReady] = useState(false);
   const [aiError, setAiError] = useState('');
 
@@ -21,7 +25,7 @@ export function useDriverMonitoring(webcamRef: RefObject<Webcam | null>) {
   const lastTelemetryEmitRef = useRef<number>(0);
 
   useEffect(() => {
-    connectSocket();
+    connectSocket(token || undefined);
     let active = true;
     const initializeFaceLandmarker = async () => {
       try {
@@ -51,8 +55,12 @@ export function useDriverMonitoring(webcamRef: RefObject<Webcam | null>) {
       }
     };
     initializeFaceLandmarker();
-    return () => { active = false; };
-  }, [setMonitoringData]);
+    return () => {
+      active = false;
+      faceLandmarkerRef.current?.close();
+      faceLandmarkerRef.current = null;
+    };
+  }, [setMonitoringData, token]);
 
   const detectFace = () => {
     if (webcamRef.current && webcamRef.current.video && faceLandmarkerRef.current) {
@@ -86,6 +94,7 @@ export function useDriverMonitoring(webcamRef: RefObject<Webcam | null>) {
             if (currentStatus === 'Closed' && lastEyeStatusRef.current === 'Open') {
               blinksRef.current.push(now);
               blinksRef.current = blinksRef.current.filter(time => now - time < 60000);
+              playBlinkAlert();
             }
             lastEyeStatusRef.current = currentStatus;
             
@@ -102,12 +111,16 @@ export function useDriverMonitoring(webcamRef: RefObject<Webcam | null>) {
             const fatigueLevel = currentFatigueRef.current;
             const isDrowsy = fatigueLevel > 70 || perclos > 0.20;
 
+            if (fatigueLevel >= 100) {
+              startCriticalAlarm();
+            }
+
             setMonitoringData(fatigueLevel, blinkRate, isDrowsy, eyeStatusStr, trackingPoints);
 
-            if (now - lastTelemetryEmitRef.current > 1000) {
+            if (now - lastTelemetryEmitRef.current > 1000 && tripId) {
               socket.emit('driverTelemetry', {
-                driverId: 'demo-driver-1',
-                tripId: tripId || 'demo-trip-id',
+                driverId,
+                tripId,
                 fatigueLevel: Math.round(fatigueLevel),
                 blinkRate,
                 perclos: (perclos * 100).toFixed(1),
@@ -125,6 +138,12 @@ export function useDriverMonitoring(webcamRef: RefObject<Webcam | null>) {
     requestRef.current = requestAnimationFrame(detectFace);
   };
 
+  const resetFatigue = () => {
+    currentFatigueRef.current = 0;
+    eyeStatesRef.current = [];
+    setMonitoringData(0, blinksRef.current.length, false, 'Open & Alert', 0);
+  };
+
   useEffect(() => {
     if (isAiReady) {
       requestRef.current = requestAnimationFrame(detectFace);
@@ -134,5 +153,5 @@ export function useDriverMonitoring(webcamRef: RefObject<Webcam | null>) {
     };
   }, [isAiReady, webcamRef, setMonitoringData]);
 
-  return { isAiReady, aiError };
+  return { isAiReady, aiError, resetFatigue };
 }

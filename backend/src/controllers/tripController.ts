@@ -1,19 +1,22 @@
 import { Request, Response } from 'express';
-import { prisma } from '../services/eventRecorder';
 import { calculateSafetyScore } from '../services/safetyScore';
+import mongoose from 'mongoose';
+import Driver from '../models/Driver';
+import Trip from '../models/Trip';
+import TelemetryEvent from '../models/TelemetryEvent';
+import SafetyEvent from '../models/SafetyEvent';
 
 export const getTripSummary = async (req: Request, res: Response): Promise<void> => {
   try {
     const { tripId } = req.params;
 
-    const telemetry = await prisma.telemetryEvent.findMany({ 
-      where: { tripId },
-      orderBy: { createdAt: 'asc' }
-    });
-    const safetyEvents = await prisma.safetyEvent.findMany({ 
-      where: { tripId },
-      orderBy: { createdAt: 'asc' }
-    });
+    if (!mongoose.isValidObjectId(tripId)) {
+      res.status(400).json({ error: 'Invalid trip ID' });
+      return;
+    }
+
+    const telemetry = await TelemetryEvent.find({ tripId }).sort({ createdAt: 1 }).lean();
+    const safetyEvents = await SafetyEvent.find({ tripId }).sort({ createdAt: 1 }).lean();
 
     if (telemetry.length === 0) {
       res.status(404).json({ error: 'Trip not found or no telemetry data.' });
@@ -40,10 +43,7 @@ export const getTripSummary = async (req: Request, res: Response): Promise<void>
     });
 
     // Optionally update trip record with final score
-    await prisma.trip.update({
-      where: { id: tripId },
-      data: { safetyScore, endedAt: new Date() }
-    }).catch(() => null); // ignore if trip record doesn't exist yet for demo
+    await Trip.findByIdAndUpdate(tripId, { safetyScore, endedAt: new Date() });
 
     res.json({
       tripId,
@@ -74,24 +74,19 @@ export const getTripSummary = async (req: Request, res: Response): Promise<void>
 export const startTrip = async (req: Request, res: Response): Promise<void> => {
   try {
     const { userId } = req.body;
-    let user = await prisma.user.findFirst({ where: { id: userId || 'demo-user-id' } });
+    let user = userId && mongoose.isValidObjectId(userId) ? await Driver.findById(userId) : null;
     
     if (!user) {
-      user = await prisma.user.create({
-        data: {
-          id: userId || 'demo-user-id',
-          email: `demo-${Date.now()}@driver.com`,
-          password: 'mock',
-          role: 'DRIVER'
-        }
+      user = await Driver.create({
+        name: 'Demo Driver',
+        phone: `demo-${Date.now()}`,
+        email: `demo-${Date.now()}@driver.com`,
+        password: 'mock',
+        safetyScore: 100
       });
     }
 
-    const trip = await prisma.trip.create({
-      data: {
-        userId: user.id,
-      }
-    });
+    const trip = await Trip.create({ userId: user._id });
 
     res.json(trip);
   } catch (error) {
@@ -103,12 +98,44 @@ export const startTrip = async (req: Request, res: Response): Promise<void> => {
 export const endTrip = async (req: Request, res: Response): Promise<void> => {
   try {
     const { tripId } = req.params;
-    await prisma.trip.update({
-      where: { id: tripId },
-      data: { endedAt: new Date() }
-    });
+    if (!mongoose.isValidObjectId(tripId)) {
+      res.status(400).json({ error: 'Invalid trip ID' });
+      return;
+    }
+    await Trip.findByIdAndUpdate(tripId, { endedAt: new Date() });
     res.json({ message: 'Trip ended successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to end trip' });
+  }
+};
+
+export const getTripHistory = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { userId } = req.query;
+    if (!userId || typeof userId !== 'string' || !mongoose.isValidObjectId(userId)) {
+      res.status(400).json({ error: 'userId query parameter is required' });
+      return;
+    }
+
+    const trips = await Trip.find({ userId }).sort({ startedAt: -1 }).lean();
+    const history = await Promise.all(trips.map(async (trip) => {
+      const telemetry = await TelemetryEvent.find({ tripId: trip._id }).sort({ createdAt: 1 }).lean();
+      const safetyEvents = await SafetyEvent.find({ tripId: trip._id }).lean();
+      const maxFatigue = telemetry.length ? Math.max(...telemetry.map((t) => t.fatigueLevel)) : 0;
+      return {
+        id: trip._id.toString(),
+        startedAt: trip.startedAt,
+        endedAt: trip.endedAt,
+        safetyScore: trip.safetyScore,
+        fatigueLevel: maxFatigue,
+        criticalAlerts: safetyEvents.filter((e) => e.severity === 'CRITICAL').length,
+        highAlerts: safetyEvents.filter((e) => e.severity === 'HIGH').length,
+      };
+    }));
+
+    res.json({ trips: history });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to load trip history' });
   }
 };

@@ -1,15 +1,18 @@
 import { Router, Request, Response } from 'express';
-import { prisma } from '../services/eventRecorder';
+import Trip from '../models/Trip';
+import SafetyEvent from '../models/SafetyEvent';
 
 const router = Router();
 
 router.get('/dashboard', async (req: Request, res: Response) => {
   try {
-    const activeTrips = await prisma.trip.count({ where: { endedAt: null } });
-    const totalEvents = await prisma.safetyEvent.count();
+    const activeTrips = await Trip.countDocuments({ endedAt: null });
+    const totalEvents = await SafetyEvent.countDocuments({
+      createdAt: { $gte: new Date(new Date().setHours(0, 0, 0, 0)) }
+    });
     
     res.json({
-      activeDrivers: activeTrips || 1,
+      activeDrivers: activeTrips,
       criticalAlertsToday: totalEvents,
       avgFleetSafetyScore: 92,
       fleetTrend: 'improving'

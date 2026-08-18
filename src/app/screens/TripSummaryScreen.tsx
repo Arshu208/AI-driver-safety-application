@@ -6,36 +6,33 @@ import Button from '../components/Button';
 import GlassCard from '../components/GlassCard';
 import { motion } from 'motion/react';
 import { api } from '../../services/api';
+import { useTripStore } from '../../store/tripStore';
 
 export default function TripSummaryScreen() {
   const navigate = useNavigate();
   const [tripData, setTripData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const tripId = useTripStore((state) => state.tripId);
+  const endTrip = useTripStore((state) => state.endTrip);
 
   useEffect(() => {
     const fetchSummary = async () => {
       try {
-        // We use demo-trip-id which is hardcoded in our telemetry pipeline for this MVP
-        const res = await api.get('/trips/demo-trip-id/summary');
+        if (!tripId) throw new Error('No active trip found');
+        const res = await api.get(`/trips/${tripId}/summary`);
         setTripData(res.data);
       } catch (e) {
         console.error(e);
-        setTripData({
-          durationMinutes: 45,
-          metrics: { safetyScore: 96, maxFatigue: 28, totalAlerts: 2, criticalAlerts: 0 },
-          telemetry: [
-            { time: '10:00', fatigue: 5 }, { time: '10:10', fatigue: 15 },
-            { time: '10:20', fatigue: 28 }, { time: '10:30', fatigue: 12 }
-          ]
-        });
+        setTripData(null);
       } finally {
         setLoading(false);
       }
     };
     fetchSummary();
-  }, []);
+  }, [tripId]);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading Summary...</div>;
+  if (!tripData) return <div className="min-h-screen p-6 flex flex-col items-center justify-center text-center"><h1>Summary unavailable</h1><p className="text-muted-foreground mb-6">No telemetry was recorded for this trip.</p><Button onClick={() => navigate('/home')}>Return to Home</Button></div>;
 
   return (
     <div className="min-h-screen p-6 pb-24">
@@ -182,7 +179,7 @@ export default function TripSummaryScreen() {
           </Button>
         </div>
 
-        <Button fullWidth onClick={() => navigate('/home')}>
+        <Button fullWidth onClick={() => { endTrip(); navigate('/home'); }}>
           Return to Home
         </Button>
       </div>

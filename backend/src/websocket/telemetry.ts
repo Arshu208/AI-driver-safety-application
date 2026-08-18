@@ -1,6 +1,8 @@
 import { Server, Socket } from 'socket.io';
 import { RiskEngine } from '../services/riskEngine';
 import { EventRecorder } from '../services/eventRecorder';
+import mongoose from 'mongoose';
+import Trip from '../models/Trip';
 
 // Memory cache to throttle telemetry writes (every 10 seconds per trip)
 const lastWriteCache: Record<string, number> = {};
@@ -11,8 +13,11 @@ export const setupTelemetrySocket = (io: Server) => {
 
     // Listen for driver telemetry streams
     socket.on('driverTelemetry', async (data) => {
-      // Hardcoded tripId for demonstration until full DB relation is built
-      const tripId = data.tripId || 'demo-trip-id';
+      const tripId = data.tripId;
+      if (!tripId || !mongoose.isValidObjectId(tripId) || !(await Trip.exists({ _id: tripId }))) {
+        socket.emit('telemetry-error', { message: 'Telemetry requires an active trip.' });
+        return;
+      }
       const now = Date.now();
 
       // 1. Process Risk
@@ -33,14 +38,17 @@ export const setupTelemetrySocket = (io: Server) => {
 
       // 3. Fleet Broadcast
       if (riskResult.triggerAlert) {
-        io.emit('fleetAlert', {
+        const alert = {
           driverId: data.driverId || socket.id,
           tripId,
+          eventType: riskResult.eventType,
           message: `ALERT: ${riskResult.eventType}`,
           severity: riskResult.severity,
           fatigueLevel: data.fatigueLevel,
           timestamp: new Date().toISOString()
-        });
+        };
+        io.emit('fatigue-alert', alert);
+        io.emit('fleetAlert', alert);
       }
     });
 

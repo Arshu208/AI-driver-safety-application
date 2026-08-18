@@ -1,5 +1,5 @@
-import { useRef } from 'react';
-import { Camera, Eye, Activity, Brain, AlertTriangle } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Camera, Eye, Activity, Brain, AlertTriangle, VolumeX } from 'lucide-react';
 import GlassCard from '../components/GlassCard';
 import StatusBadge from '../components/StatusBadge';
 import Webcam from 'react-webcam';
@@ -9,17 +9,50 @@ import { useDriverMonitoring } from '../../hooks/useDriverMonitoring';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../services/api';
 import Button from '../components/Button';
+import { useAuthStore } from '../../store/authStore';
+import { cleanupAlertAudio, getAlertAudioStatus, initializeAlertAudio, stopAllAlertSounds } from '../../services/alertAudio';
 
 export default function AIDriverMonitoringLive() {
   const navigate = useNavigate();
   const { fatigueLevel, blinkRate, eyeStatus, trackingPoints, isDrowsy } = useMonitoringStore();
   const { tripId, endTrip } = useTripStore();
+  const emergencyContact = useAuthStore((state) => state.user?.emergencyContact);
   const webcamRef = useRef<Webcam>(null);
-  
+  const [cameraStatus, setCameraStatus] = useState('Requesting camera access...');
+  const [soundStatus, setSoundStatus] = useState(getAlertAudioStatus());
+
+  useEffect(() => {
+    void initializeAlertAudio().then((ready) => {
+      setSoundStatus(ready ? 'Alert Sound: Ready' : 'Alert Sound: Not Ready');
+    });
+  }, []);
+
   // Start the MediaPipe AI loop
-  const { isAiReady, aiError } = useDriverMonitoring(webcamRef);
+  const { isAiReady, aiError, resetFatigue } = useDriverMonitoring(webcamRef);
+
+  const handleDismissCriticalAlarm = () => {
+    stopAllAlertSounds();
+    setSoundStatus('Alert Sound: Stopped');
+    resetFatigue();
+  };
+
+  const showStopButton = fatigueLevel >= 70 || isDrowsy;
+
+  useEffect(() => {
+    let stream: MediaStream | null = null;
+    navigator.mediaDevices?.getUserMedia({ video: true, audio: false })
+      .then((grantedStream) => {
+        stream = grantedStream;
+        setCameraStatus('Camera access granted');
+        stream.getTracks().forEach((track) => track.stop());
+      })
+      .catch(() => setCameraStatus('Camera access is required for live monitoring'));
+    return () => stream?.getTracks().forEach((track) => track.stop());
+  }, []);
 
   const handleEndTrip = async () => {
+    stopAllAlertSounds();
+    cleanupAlertAudio();
     if (tripId) {
       try {
         await api.post(`/trips/${tripId}/end`);
@@ -72,7 +105,7 @@ export default function AIDriverMonitoringLive() {
           <div className="absolute top-4 left-4">
             <div className="flex items-center gap-2 glass-card px-3 py-1.5 rounded-lg bg-black/40 backdrop-blur-md">
               <Camera className="w-4 h-4 text-primary" />
-              <span className="text-xs text-white">Front Camera</span>
+              <span className="text-xs text-white">{cameraStatus}</span>
             </div>
           </div>
 
@@ -118,6 +151,22 @@ export default function AIDriverMonitoringLive() {
       <div className="mb-4">
         <h3 className="mb-3">AI Analysis</h3>
       </div>
+
+      <GlassCard className={`mb-3 ${isDrowsy ? 'border-error/40' : ''}`}>
+        <div className="flex items-center justify-between gap-3">
+          <div><p className="text-sm font-semibold">Safety audio</p><p className="text-xs text-muted-foreground">{soundStatus}</p></div>
+          <span className={`h-3 w-3 rounded-full ${isDrowsy ? 'animate-pulse bg-error' : 'bg-success'}`} />
+        </div>
+      </GlassCard>
+
+      {showStopButton && (
+        <Button fullWidth variant="danger" className="mb-4" onClick={handleDismissCriticalAlarm}>
+          <span className="flex items-center justify-center gap-2">
+            <VolumeX className="h-5 w-5" />
+            {fatigueLevel >= 100 ? 'Turn Off Critical Alarm & Reset Fatigue' : 'Turn Off Alert Sound'}
+          </span>
+        </Button>
+      )}
 
       <div className="space-y-3">
         <GlassCard glow={isDrowsy ? "error" : "none"}>

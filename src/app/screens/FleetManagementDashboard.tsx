@@ -25,16 +25,16 @@ export default function FleetManagementDashboard() {
       setRecentAlerts(prev => [{
         vehicle: `Vehicle-${data.driverId.slice(-3)}`,
         driver: `Driver ${data.driverId.substring(0, 5)}`,
-        alert: data.event.eventType.replace('_', ' '),
-        severity: data.event.severity === 'CRITICAL' ? 'warning' : 'info',
+        alert: data.eventType.replaceAll('_', ' '),
+        severity: data.severity === 'CRITICAL' ? 'warning' : 'info',
         time: 'Just now'
       }, ...prev].slice(0, 10));
     };
 
-    socket.on('fleetAlert', handleFleetAlert);
+    socket.on('fatigue-alert', handleFleetAlert);
 
     return () => {
-      socket.off('fleetAlert', handleFleetAlert);
+      socket.off('fatigue-alert', handleFleetAlert);
     };
   }, []);
 

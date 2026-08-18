@@ -7,7 +7,11 @@ import { motion } from 'motion/react';
 export default function EnableNotificationsScreen() {
   const navigate = useNavigate();
 
-  const handleEnable = () => {
+  const handleEnable = async () => {
+    if ('Notification' in window) {
+      const permission = await Notification.requestPermission();
+      localStorage.setItem('ridesafe-notifications', permission);
+    }
     navigate('/vehicle-setup');
   };
 
