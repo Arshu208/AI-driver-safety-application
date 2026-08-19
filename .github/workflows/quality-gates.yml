@@ -52,6 +52,7 @@ jobs:
         env:
           MONGO_URI: mongodb://127.0.0.1:27017/ridesafe
           PORT: 5000
+          RIDESAFE_OFFLINE: true
         run: |
           cd backend
           nohup npm start > "$RUNNER_TEMP/backend.log" 2>&1 &

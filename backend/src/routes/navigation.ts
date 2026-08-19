@@ -37,22 +37,24 @@ router.get('/search', async (req: Request, res: Response) => {
     }
 
     const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=8&q=${encodeURIComponent(query)}`;
-    try {
-      const response = await fetch(url, {
-        headers: { 'User-Agent': 'RideSafe/1.0 (navigation-search)' },
-      });
+    if (process.env.RIDESAFE_OFFLINE !== 'true') {
+      try {
+        const response = await fetch(url, {
+          headers: { 'User-Agent': 'RideSafe/1.0 (navigation-search)' },
+        });
 
-      if (!response.ok) {
-        throw new Error('provider failed');
-      }
+        if (!response.ok) {
+          throw new Error('provider failed');
+        }
 
-      const data = await response.json();
-      if (Array.isArray(data) && data.length > 0) {
-        res.json({ places: data });
-        return;
+        const data = await response.json();
+        if (Array.isArray(data) && data.length > 0) {
+          res.json({ places: data });
+          return;
+        }
+      } catch {
+        // Fall through to safe built-in fallback data.
       }
-    } catch {
-      // Fall through to safe built-in fallback data.
     }
 
     const safeMatches = fallbackPlaces
