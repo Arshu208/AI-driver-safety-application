@@ -67,10 +67,10 @@ jobs:
       - name: Start web app
         run: |
           nohup npm run dev -- --host 127.0.0.1 > "$RUNNER_TEMP/web.log" 2>&1 &
-          for i in {1..30}; do curl --fail http://127.0.0.1:5173 && break || sleep 2; done
+          for i in {1..30}; do curl --fail http://127.0.0.1:5175 && break || sleep 2; done
       - name: Run Selenium tests
         env:
-          RIDESAFE_WEB_URL: http://127.0.0.1:5173
+          RIDESAFE_WEB_URL: http://127.0.0.1:5175
         working-directory: selenium-tests
         run: npm test
       - name: Generate Selenium Excel report
