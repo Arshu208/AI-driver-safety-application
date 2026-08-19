@@ -105,7 +105,7 @@ class LoadTestSuite {
   async testAnalyticsEndpoint(token) {
     try {
       const startTime = performance.now();
-      await this.client.get('/analytics/summary', 
+      await this.client.get('/analytics/dashboard', 
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const responseTime = performance.now() - startTime;
