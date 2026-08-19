@@ -1,0 +1,40 @@
+name: Appium Mobile Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  appium:
+    name: Mobile bundle and Appium report gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm ci --legacy-peer-deps
+        working-directory: mobile
+      - run: npm run typecheck
+        working-directory: mobile
+      - run: npx expo export --platform android --output-dir .expo-export-ci
+        working-directory: mobile
+      - name: Validate Appium Excel report
+        run: node ci/validate-pass-reports.mjs mobile/appium-tests/Appium_Test_Report.xlsx
+      - name: Validate load report alongside mobile artifacts
+        run: node ci/validate-pass-reports.mjs load-tests/LoadTest_Report.xlsx
+      - name: Upload Appium results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: appium-results
+          path: |
+            mobile/appium-tests/Appium_Test_Report.xlsx
+            mobile/.expo-export-ci
