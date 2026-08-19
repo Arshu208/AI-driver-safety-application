@@ -2,8 +2,8 @@ import { io, Socket } from 'socket.io-client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_URL } from '../api';
 
-function sanitizeSocketHost(url: string) {
-  if (!url) return url;
+function sanitizeSocketHost(url?: string) {
+  if (!url || typeof url !== 'string') return 'http://10.0.2.2:5000';
   const trimmed = url.trim();
   const cleaned = trimmed.replace(/\/api$/, '').replace(/\/$/, '');
   if (cleaned.includes('<') || cleaned.includes('>') || cleaned.includes('YOUR_MACHINE_IP')) {

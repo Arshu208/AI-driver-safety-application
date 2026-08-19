@@ -6,7 +6,7 @@ import { Platform } from 'react-native';
 const AUTH_STORAGE_KEY = 'ridesafe-auth';
 
 function isValidLanHost(value?: string) {
-  if (!value) return false;
+  if (!value || typeof value !== 'string') return false;
   const trimmed = value.trim();
   if (!trimmed || trimmed.includes('<') || trimmed.includes('>') || trimmed.includes('YOUR_MACHINE_IP')) {
     return false;
@@ -15,7 +15,7 @@ function isValidLanHost(value?: string) {
 }
 
 function isValidApiUrl(value?: string) {
-  if (!value) return false;
+  if (!value || typeof value !== 'string') return false;
   const trimmed = value.trim();
   if (!trimmed || trimmed.includes('<') || trimmed.includes('>') || trimmed.includes('YOUR_MACHINE_IP')) {
     return false;
