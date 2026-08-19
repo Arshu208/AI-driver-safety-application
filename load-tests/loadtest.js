@@ -94,7 +94,7 @@ class LoadTestSuite {
   async testNavigationSearchEndpoint() {
     try {
       const startTime = performance.now();
-      await this.client.get('/navigation/search?query=restaurant');
+      await this.client.get('/navigation/search?q=restaurant');
       const responseTime = performance.now() - startTime;
       this.recordResponse(responseTime, true);
     } catch (error) {
