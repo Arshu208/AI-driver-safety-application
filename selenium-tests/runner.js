@@ -80,11 +80,33 @@ async function verifyAction(driver, testCase) {
   return result;
 }
 
+async function seedAuthenticatedSession(driver) {
+  await driver.get(WEB_APP_URL);
+  await driver.executeScript(() => {
+    const user = {
+      id: 'ci-driver',
+      name: 'CI Driver',
+      phone: '9999999999',
+      role: 'DRIVER',
+      safetyScore: 100,
+    };
+    const state = { user, token: 'ci-test-token', isAuthenticated: true };
+    localStorage.setItem('token', state.token);
+    localStorage.setItem('user', JSON.stringify(user));
+    localStorage.setItem('ridesafe-auth', JSON.stringify({ state, version: 0 }));
+  });
+  await driver.navigate().refresh();
+}
+
 async function run() {
-  const driver = await new Builder().forBrowser('chrome').setChromeOptions(new chrome.Options().headless()).build();
+  const chromeOptions = new chrome.Options()
+    .headless()
+    .addArguments('--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--window-size=1280,900');
+  const driver = await new Builder().forBrowser('chrome').setChromeOptions(chromeOptions).build();
   const results = [];
 
   try {
+    await seedAuthenticatedSession(driver);
     for (const testCase of testCases) {
       const result = {
         id: testCase.id,
