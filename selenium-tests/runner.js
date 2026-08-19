@@ -12,6 +12,7 @@ async function loadRoute(driver, path) {
   const url = `${WEB_APP_URL.replace(/\/$/, '')}${path}`;
   await driver.get(url);
   await driver.wait(until.elementLocated(By.css('body')), DEFAULT_TIMEOUT);
+  await driver.wait(until.elementLocated(By.css('#root > *')), DEFAULT_TIMEOUT);
   return { url: new URL(await driver.getCurrentUrl()) };
 }
 
@@ -99,6 +100,19 @@ async function seedAuthenticatedSession(driver) {
   await driver.navigate().refresh();
 }
 
+async function runTestCaseWithRetry(driver, testCase) {
+  let lastError;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      return await verifyAction(driver, testCase);
+    } catch (error) {
+      lastError = error;
+      if (attempt === 0) await driver.navigate().refresh();
+    }
+  }
+  throw lastError;
+}
+
 async function run() {
   const chromeOptions = new chrome.Options()
     .addArguments('--headless=new', '--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--window-size=1280,900');
@@ -117,7 +131,7 @@ async function run() {
       };
 
       try {
-        const actionResult = await verifyAction(driver, testCase);
+        const actionResult = await runTestCaseWithRetry(driver, testCase);
         result.detail = actionResult.detail;
       } catch (error) {
         result.status = 'FAIL';

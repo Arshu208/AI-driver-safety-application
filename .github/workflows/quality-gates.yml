@@ -1,0 +1,28 @@
+name: Quality Gates
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  report-validation:
+    name: Test report validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Validate Selenium report
+        run: node ci/validate-pass-reports.mjs selenium-tests/Selenium_Test_Report.xlsx selenium-tests/ridesafe-selenium-report.xlsx
+      - name: Validate Appium report
+        run: node ci/validate-pass-reports.mjs mobile/appium-tests/Appium_Test_Report.xlsx
+      - name: Validate API load report
+        run: node ci/validate-pass-reports.mjs load-tests/LoadTest_Report.xlsx
