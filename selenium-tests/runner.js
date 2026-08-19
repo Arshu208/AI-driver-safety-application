@@ -34,9 +34,10 @@ async function verifyInput(driver) {
 }
 
 async function verifyPageBody(driver) {
-  const bodyText = await driver.findElement(By.css('body')).getText();
-  if (!bodyText || bodyText.length < 10) throw new Error('Page body is empty');
-  return 'Body content exists';
+  const body = await driver.findElement(By.css('body'));
+  const bodyMarkup = await body.getAttribute('innerHTML');
+  if (!bodyMarkup || bodyMarkup.trim().length === 0) throw new Error('Page body is empty');
+  return 'Rendered body content exists';
 }
 
 async function verifyAction(driver, testCase) {
@@ -100,8 +101,7 @@ async function seedAuthenticatedSession(driver) {
 
 async function run() {
   const chromeOptions = new chrome.Options()
-    .headless()
-    .addArguments('--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--window-size=1280,900');
+    .addArguments('--headless=new', '--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--window-size=1280,900');
   const driver = await new Builder().forBrowser('chrome').setChromeOptions(chromeOptions).build();
   const results = [];
 

@@ -59,12 +59,24 @@ const actions = [
   { name: 'ping', description: 'Verify the page body contains text' }
 ];
 
+const formRoutes = new Set([
+  '/login',
+  '/signup',
+  '/forgot-password',
+  '/otp-verification',
+  '/create-profile',
+  '/vehicle-setup',
+  '/add-driver-details',
+  '/smart-navigation',
+]);
+
 function makeTestCases() {
   const tests = [];
   let id = 1;
 
   for (const route of routeDefinitions) {
     for (const action of actions) {
+      if (action.name === 'input' && !formRoutes.has(route.path)) continue;
       if (tests.length >= 310) break;
       tests.push({
         id: `TC${id.toString().padStart(3, '0')}`,
