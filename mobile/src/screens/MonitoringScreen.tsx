@@ -158,15 +158,13 @@ export default function MonitoringScreen() {
       }
       setDetectorStatus('loading');
       setDetectorError('');
-      await initializeEyeDetector();
+      const detector = await initializeEyeDetector();
       setDetectorStatus('ready');
-      console.log('mobile: Real eye landmark detector ready');
+      console.log(`mobile: ${detector ? 'Real eye landmark detector' : 'Camera monitoring fallback'} ready`);
     } catch (error) {
-      setDetectorStatus('error');
-      setDetectorError(error instanceof Error ? error.message : String(error));
-      console.error('mobile: Failed to initialize eye landmark detector', error);
-      Alert.alert('Eye detector unavailable', 'The real eye landmark model could not be loaded. Check the phone internet connection and try again.');
-      return;
+      setDetectorStatus('ready');
+      setDetectorError('Using camera monitoring fallback');
+      console.warn('mobile: Eye landmark detector unavailable; continuing with camera fallback', error);
     }
 
     if (!user?.id) {
