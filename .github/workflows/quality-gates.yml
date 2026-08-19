@@ -56,6 +56,13 @@ jobs:
           cd backend
           nohup npm start > "$RUNNER_TEMP/backend.log" 2>&1 &
           for i in {1..30}; do curl --fail http://127.0.0.1:5000/api/health && break || sleep 2; done
+      - name: Seed load-test driver
+        run: |
+          curl --fail-with-body --silent --show-error \
+            -X POST http://127.0.0.1:5000/api/auth/register \
+            -H 'Content-Type: application/json' \
+            --data '{"name":"CI Driver","phone":"9999999999","email":"ci-driver@example.com","password":"Test@123","vehicleNumber":"CI-001","emergencyContact":"9999999998"}' \
+            || test $? -eq 22
       - name: Start web app
         run: |
           nohup npm run dev -- --host 127.0.0.1 > "$RUNNER_TEMP/web.log" 2>&1 &
@@ -68,6 +75,8 @@ jobs:
       - name: Generate Selenium Excel report
         working-directory: selenium-tests
         run: npm run report
+      - name: Validate Selenium Excel report
+        run: node ci/validate-pass-reports.mjs selenium-tests/ridesafe-selenium-report.xlsx
       - name: Run API load test
         env:
           RIDESAFE_API_URL: http://127.0.0.1:5000/api
@@ -94,6 +103,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
+      - run: npm ci
       - run: npm ci --legacy-peer-deps
         working-directory: mobile
       - run: npm run typecheck
